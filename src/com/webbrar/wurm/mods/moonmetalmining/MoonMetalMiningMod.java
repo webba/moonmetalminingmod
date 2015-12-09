@@ -28,7 +28,9 @@ import org.gotti.wurmunlimited.modloader.interfaces.WurmMod;
 public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
     private boolean useMoonMetalMiningMod = false;
     private boolean changeVeinCap = false;
+    private boolean changeHomeVeinCap = false;
     private int newVeinCap = 10000;
+    private int newHomeVeinCap = 100;
     private boolean randomMoonMetalDrops = false;
     private static int staticRandomGlimmersteelChance = 3000;
     private static int staticRandomAdamantiteChance = 3000;
@@ -41,10 +43,11 @@ public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
     public void configure(Properties properties) {
         useMoonMetalMiningMod = Boolean.valueOf(properties.getProperty("useMoonMetalMiningMod", Boolean.toString(useMoonMetalMiningMod)));
         changeVeinCap = Boolean.valueOf(properties.getProperty("changeVeinCap", Boolean.toString(changeVeinCap)));
+        changeHomeVeinCap = Boolean.valueOf(properties.getProperty("changeHomeVeinCap", Boolean.toString(changeHomeVeinCap)));
         newVeinCap = Integer.valueOf(properties.getProperty("newVeinCap", Integer.toString(newVeinCap)));
-        if (newVeinCap < 0 ){
-            newVeinCap = 0;
-        }
+        newVeinCap = Math.max(1, newVeinCap);
+        newHomeVeinCap = Integer.valueOf(properties.getProperty("newHomeVeinCap", Integer.toString(newHomeVeinCap)));
+        newHomeVeinCap = Math.max(1, Math.min(100, newHomeVeinCap));
         randomMoonMetalDrops = Boolean.valueOf(properties.getProperty("randomMoonMetalDrops", Boolean.toString(randomMoonMetalDrops)));
         MoonMetalMiningMod.staticRandomGlimmersteelChance = Integer.valueOf(properties.getProperty("randomGlimmersteelDropChance", Integer.toString(MoonMetalMiningMod.staticRandomGlimmersteelChance)));
         MoonMetalMiningMod.staticRandomAdamantiteChance = Integer.valueOf(properties.getProperty("randomAdamantiteDropChance", Integer.toString(MoonMetalMiningMod.staticRandomGlimmersteelChance)));
@@ -60,8 +63,9 @@ public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
             if(randomMoonMetalDrops){
                 addRandomMoonMetalDrop();
             }
-        }
-        if(useMoonMetalMiningMod){
+            if(changeHomeVeinCap){
+                changeHomeServerVeinCap();
+            }
         }
     }
     
@@ -116,7 +120,7 @@ public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
     
     private void removeMoonMetalVeinCap(){
         try{
-            logger.log(Level.INFO, "Removing Moon Metal vein ammount cap");
+            logger.log(Level.INFO, "Changing Moon Metal vein ammount cap");
             ClassPool cp = HookManager.getInstance().getClassPool();
             CtClass caveWallClass = cp.get("com.wurmonline.server.behaviours.CaveWallBehaviour");
             
@@ -142,7 +146,7 @@ public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
                     codeIterator.insertGap(pos-7, 1);
                     codeIterator.writeByte(CodeIterator.LDC_W, pos-7);
                     codeIterator.write16bit(capRef, pos-6);
-                    logger.log(Level.INFO, "Moon metal vein cap removed");
+                    logger.log(Level.INFO, "Moon metal vein cap changed");
                     break;
                 }
             }
@@ -155,6 +159,45 @@ public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
         catch(BadBytecode e){
             System.out.println("BAD BYTECODE ERROR ----- ");
             //e.printStackTrace();
+        }
+    }
+    private void changeHomeServerVeinCap(){
+        try{
+            this.logger.log(Level.INFO, "Changing home server vein quality cap");
+            ClassPool cp = HookManager.getInstance().getClassPool();
+            CtClass tileRockClass = cp.get("com.wurmonline.server.behaviours.TileRockBehaviour");
+            
+            MethodInfo mi = tileRockClass.getConstructor(Descriptor.ofConstructor(new CtClass[]{})).getMethodInfo();
+            CodeAttribute ca = mi.getCodeAttribute();
+            ConstPool cpool = ca.getConstPool();
+            
+
+            CodeIterator codeIterator = ca.iterator();
+            while(codeIterator.hasNext()) {
+
+                int pos = codeIterator.next();
+                int op = codeIterator.byteAt(pos);
+                int biPusharg = codeIterator.byteAt(pos+1);
+                int nextop = codeIterator.byteAt(pos+2);
+                int nextarg = codeIterator.u16bitAt(pos+3);
+                
+                if (op == CodeIterator.BIPUSH && biPusharg == 50 && nextop == CodeIterator.PUTSTATIC && cpool.getFieldrefName(nextarg).equals("MAX_QL")){
+                    
+                    logger.log(Level.INFO, "Found bytecode pattern for home server metal veins");
+                    codeIterator.writeByte((byte)newHomeVeinCap, pos+1);
+                    logger.log(Level.INFO, "Home server vein cap changed");
+                    break;
+                }
+            }
+            mi.rebuildStackMap(cp);
+        }
+        catch(NotFoundException e)
+        {
+            throw new HookException(e);
+        }
+        catch(BadBytecode e){
+            System.out.println("BAD BYTECODE ERROR ----- ");
+            e.printStackTrace();
         }
     }
 }
