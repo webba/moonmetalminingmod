@@ -6,7 +6,6 @@ import com.wurmonline.server.items.ItemFactory;
 import com.wurmonline.server.creatures.Creature;
 import com.wurmonline.server.behaviours.Action;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -20,12 +19,12 @@ import org.gotti.wurmunlimited.modloader.classhooks.HookManager;
 import org.gotti.wurmunlimited.modloader.classhooks.InvocationHandlerFactory;
 import org.gotti.wurmunlimited.modloader.interfaces.Configurable;
 import org.gotti.wurmunlimited.modloader.interfaces.PreInitable;
-import org.gotti.wurmunlimited.modloader.interfaces.WurmMod;
+import org.gotti.wurmunlimited.modloader.interfaces.WurmServerMod;
 /**
  *
  * @author Webba
  */
-public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
+public class MoonMetalMiningMod implements WurmServerMod, Configurable, PreInitable {
     private boolean useMoonMetalMiningMod = false;
     private boolean changeVeinCap = false;
     private boolean changeHomeVeinCap = false;
@@ -35,7 +34,7 @@ public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
     private static int staticRandomGlimmersteelChance = 3000;
     private static int staticRandomAdamantiteChance = 3000;
     private static int staticRandomSeryllChance = 3000;
-    private String actionMethodDesc = "(Lcom/wurmonline/server/behaviours/Action;Lcom/wurmonline/server/creatures/Creature;Lcom/wurmonline/server/items/Item;IIZIISF)Z";
+    private String actionMethodDesc = "(Lcom/wurmonline/server/behaviours/Action;Lcom/wurmonline/server/creatures/Creature;Lcom/wurmonline/server/items/Item;IIZIIISF)Z";
     private String createGemMethodDesc = "(IIIILcom/wurmonline/server/creatures/Creature;DZLcom/wurmonline/server/behaviours/Action;)Lcom/wurmonline/server/items/Item;";
     private Logger logger = Logger.getLogger(this.getClass().getName());
     
@@ -59,12 +58,15 @@ public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
         if(useMoonMetalMiningMod){
             if(changeVeinCap){
                 removeMoonMetalVeinCap();
+                logger.log(Level.INFO, "MoonMetalMining: Moon metal vein cap changed");
             }
             if(randomMoonMetalDrops){
                 addRandomMoonMetalDrop();
+                logger.log(Level.INFO, "MoonMetalMining: Random moon metal drops added.");
             }
             if(changeHomeVeinCap){
                 changeHomeServerVeinCap();
+                logger.log(Level.INFO, "MoonMetalMining: Home server vein cap changed.");
             }
         }
     }
@@ -130,26 +132,29 @@ public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
             int capRef = constPool.addIntegerInfo(newVeinCap);
 
             CodeIterator codeIterator = ca.iterator();
+            
             while(codeIterator.hasNext()) {
 
                 int pos = codeIterator.next();
                 int op = codeIterator.byteAt(pos);
-                int siPusharg = codeIterator.u16bitAt(pos+1);
-                
-                //bipush(2) if_icmple(3) iload(2)  <pos>sipush(3) if_icmpeq(3) iload(2) sipush(3) if_icmpne(3) TOOVERWRITE(bipush(2) to iload(2)) TOGET(istore(2)) overwritepos: 14-15 getpos = 17
-                
-                if (op == CodeIterator.SIPUSH && siPusharg == 693){
-                    logger.log(Level.INFO, "Found bytecode pattern for moon metal veins");
-                    codeIterator.insertGap(pos+14, 1);
-                    codeIterator.writeByte(CodeIterator.LDC_W, pos+14);
-                    codeIterator.write16bit(capRef, pos+15);
-                    codeIterator.insertGap(pos-7, 1);
-                    codeIterator.writeByte(CodeIterator.LDC_W, pos-7);
-                    codeIterator.write16bit(capRef, pos-6);
-                    logger.log(Level.INFO, "Moon metal vein cap changed");
-                    break;
+                if (op == CodeIterator.SIPUSH)
+                {
+                	int siPusharg = codeIterator.u16bitAt(pos+1);
+                	if (siPusharg == 693)
+                	{
+                		logger.log(Level.INFO, "Found bytecode pattern for moon metal veins");
+                        codeIterator.insertGap(pos+14, 1);
+                        codeIterator.writeByte(CodeIterator.LDC_W, pos+14);
+                        codeIterator.write16bit(capRef, pos+15);
+                        codeIterator.insertGap(pos-7, 1);
+                        codeIterator.writeByte(CodeIterator.LDC_W, pos-7);
+                        codeIterator.write16bit(capRef, pos-6);
+                        logger.log(Level.INFO, "Moon metal vein cap changed");
+                        break;
+                	}
                 }
             }
+            
             mi.rebuildStackMap(cp);
         }
         catch(NotFoundException e)
@@ -177,16 +182,21 @@ public class MoonMetalMiningMod implements WurmMod, Configurable, PreInitable {
 
                 int pos = codeIterator.next();
                 int op = codeIterator.byteAt(pos);
-                int biPusharg = codeIterator.byteAt(pos+1);
-                int nextop = codeIterator.byteAt(pos+2);
-                int nextarg = codeIterator.u16bitAt(pos+3);
                 
-                if (op == CodeIterator.BIPUSH && biPusharg == 50 && nextop == CodeIterator.PUTSTATIC && cpool.getFieldrefName(nextarg).equals("MAX_QL")){
-                    
-                    logger.log(Level.INFO, "Found bytecode pattern for home server metal veins");
-                    codeIterator.writeByte((byte)newHomeVeinCap, pos+1);
-                    logger.log(Level.INFO, "Home server vein cap changed");
-                    break;
+                if (op == CodeIterator.BIPUSH){
+                	int biPusharg = codeIterator.byteAt(pos+1);
+                    if(biPusharg == 50 && codeIterator.getCodeLength() > pos + 2){
+                        int nextop = codeIterator.byteAt(pos+2);
+                    	if(nextop == CodeIterator.PUTSTATIC){
+                            int nextarg = codeIterator.u16bitAt(pos+3);
+                    		if(cpool.getFieldrefName(nextarg).equals("MAX_QL")){
+			                    logger.log(Level.INFO, "Found bytecode pattern for home server metal veins");
+			                    codeIterator.writeByte((byte)newHomeVeinCap, pos+1);
+			                    logger.log(Level.INFO, "Home server vein cap changed");
+                    		}
+                    	}
+	                    break;
+                    }
                 }
             }
             mi.rebuildStackMap(cp);

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/activation.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/annotations.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/cfr_0_108.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/client.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/common.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/commons-codec-1.6.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/controlsfx-8.20.8.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/controlsfx-8.20.8-sources.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/fer.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/httpclient-4.2.5.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/httpcore-4.2.4.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/javassist.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/javaws.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/jsr305.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/jtwitter.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/mail.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/modlauncher.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/mysql-connector.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/mysql-connector-java-5.1.23-bin.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/patcher.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/procyon.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/procyon-decompiler-0.5.30.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/server.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/servlet.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/signpost-core.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/sqlite-jdbc-3.8.11.2.jar"/>
+	<classpathentry kind="lib" path="E:/codeing/Java/wurmdecompiled/SteamServerJni.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
